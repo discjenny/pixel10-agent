@@ -1,9 +1,15 @@
 # Baseline
 -A FW_HOME -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A FW_HOME -o lo -j ACCEPT
+# DHCPv6 client (546 -> 547)
+-A FW_HOME -p udp --sport 546 --dport 547 -j ACCEPT
 # DNS (remove if DoH/VPN-only)
 -A FW_HOME -p udp --dport 53 -j ACCEPT
 -A FW_HOME -p tcp --dport 53 -j ACCEPT
+# ICMPv6 essentials (RS 133, NS 135, Echo 128)
+-A FW_HOME -p ipv6-icmp --icmpv6-type 133 -j ACCEPT
+-A FW_HOME -p ipv6-icmp --icmpv6-type 135 -j ACCEPT
+-A FW_HOME -p ipv6-icmp --icmpv6-type 128 -j ACCEPT
 # App UIDs (replace numbers)
 # -A FW_HOME -m owner --uid-owner 10123 -j ACCEPT   # Termux
 # -A FW_HOME -m owner --uid-owner 10345 -j ACCEPT   # Browser

@@ -1,3 +1,11 @@
 -A FW_AI -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A FW_AI -o lo -j ACCEPT
-# -A FW_AI -m owner --uid-owner 10123 -j ACCEPT   # Termux only
+# DHCPv4 client (68 -> 67)
+-A FW_AI -p udp --sport 68 --dport 67 -j ACCEPT
+# DNS
+-A FW_AI -p udp --dport 53 -j ACCEPT
+-A FW_AI -p tcp --dport 53 -j ACCEPT
+# ICMP ping (optional)
+-A FW_AI -p icmp --icmp-type echo-request -j ACCEPT
+# Termux
+-A FW_AI -m owner --uid-owner 10308 -j ACCEPT
