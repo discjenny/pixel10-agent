@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# All-in-one: validate -> push -> build module -> install -> set default -> optional reboot
+# All-in-one: push -> build module zip -> direct-install -> set default -> optional reboot
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 DEFAULT_PROFILE=""
 REBOOT=0
-VALIDATE=1
 INSTALL=1
 
 usage(){
   cat <<USAGE
-Usage: $(basename "$0") [--default FW_HOME|FW_AI|FW_LOCKED] [--no-validate] [--no-install] [--reboot]
+Usage: $(basename "$0") [--default FW_HOME|FW_AI|FW_LOCKED] [--no-install] [--reboot]
 USAGE
 }
 
@@ -19,8 +18,6 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --default)
       DEFAULT_PROFILE="${2:-}"; shift 2 ;;
-    --no-validate)
-      VALIDATE=0; shift ;;
     --no-install)
       INSTALL=0; shift ;;
     --reboot)
@@ -44,27 +41,24 @@ if [ -n "$DEFAULT_PROFILE" ]; then
   esac
 fi
 
-if [ $VALIDATE -eq 1 ]; then
-  "$ROOT/scripts/test_apply.sh"
-fi
+"$ROOT/scripts/push_profiles.sh"  # includes validation
 
-"$ROOT/scripts/push_profiles.sh"
-
-# Build Magisk module zip
-bash "$ROOT/../magisk/build_firewall_module_zip.sh"
+# Build Magisk module zip (artifact only; not auto-pushed)
+bash "$ROOT/scripts/build_magisk_module_zip.sh"
 
 if [ $INSTALL -eq 1 ]; then
-  ZIP_PATH="$ROOT/../magisk/firewall-magisk.zip"
-  adb push "$ZIP_PATH" /sdcard/ >/dev/null
+  ZIP_PATH="$ROOT/../iptables/iptables-firewall-magisk.zip"
+  DEST="/data/local/tmp/iptables-firewall-magisk.zip"
+  adb push "$ZIP_PATH" "$DEST" >/dev/null
   if adb shell su -c 'command -v magisk >/dev/null 2>&1'; then
-    echo "[*] Attempting module install via magisk CLI"
-    if adb shell su -c 'magisk --install-module /sdcard/firewall-magisk.zip >/dev/null 2>&1'; then
-      ok "Module install requested; reboot required"
+    echo "[*] Installing module via magisk CLI"
+    if adb shell su -c "magisk --install-module '$DEST' >/dev/null 2>&1"; then
+      ok "Module install requested; reboot required to activate"
     else
-      echo "[!] magisk CLI failed; install zip manually in Magisk app" >&2
+      echo "[!] magisk CLI failed; you can install manually from the Magisk app using this file: $DEST" >&2
     fi
   else
-    echo "[*] magisk CLI not found; install zip manually in Magisk app" >&2
+    echo "[!] magisk CLI not found; please install the zip manually from: $DEST" >&2
   fi
 fi
 

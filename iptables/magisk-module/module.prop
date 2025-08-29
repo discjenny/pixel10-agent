@@ -1,0 +1,6 @@
+id=iptables-firewall
+name=Firewall Profiles (iptables)
+version=1.0.1
+versionCode=101
+author=Jenny
+description=Loads iptables profiles at boot from /data/adb/firewall and selects FW_ACTIVE. Default FW_LOCKED; override via /data/adb/firewall/default_profile. Installs fw_switch_active.sh to /data/local/bin.
