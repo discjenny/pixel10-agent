@@ -1,0 +1,2 @@
+-A FW_LOCKED -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A FW_LOCKED -o lo -j ACCEPT

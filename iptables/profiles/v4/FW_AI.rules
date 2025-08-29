@@ -1,0 +1,3 @@
+-A FW_AI -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A FW_AI -o lo -j ACCEPT
+# -A FW_AI -m owner --uid-owner 10123 -j ACCEPT   # Termux only

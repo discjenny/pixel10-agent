@@ -1,0 +1,9 @@
+# Baseline
+-A FW_HOME -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A FW_HOME -o lo -j ACCEPT
+# DNS (remove if DoH/VPN-only)
+-A FW_HOME -p udp --dport 53 -j ACCEPT
+-A FW_HOME -p tcp --dport 53 -j ACCEPT
+# App UIDs (replace numbers)
+# -A FW_HOME -m owner --uid-owner 10123 -j ACCEPT   # Termux
+# -A FW_HOME -m owner --uid-owner 10345 -j ACCEPT   # Browser
