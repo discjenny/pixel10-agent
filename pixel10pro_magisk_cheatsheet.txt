@@ -1,0 +1,139 @@
+# Pixel 10 Pro – Magisk Root Cheat Sheet (Arch Linux)
+
+---
+
+## 1. Install ADB / Fastboot and Udev Rules
+
+```bash
+sudo pacman -Syu android-tools android-udev
+```
+
+Add yourself to the **adbusers** group:
+
+```bash
+getent group adbusers || sudo groupadd adbusers
+sudo gpasswd -a "$USER" adbusers
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+Replug the phone and confirm USB debugging prompt on the device.
+
+---
+
+## 2. Test ADB / Fastboot Connection
+
+```bash
+adb kill-server
+adb start-server
+adb devices
+```
+
+Reboot to bootloader:
+
+```bash
+adb reboot bootloader
+fastboot devices
+```
+
+---
+
+## 3. Unlock Bootloader (**WIPES DATA!**)
+
+```bash
+fastboot flashing unlock
+```
+
+Confirm unlock on the phone (volume + power). Device will reboot and wipe.  
+Re-enable **USB debugging** after setup.
+
+---
+
+## 4. Verify Build ID Matches Factory Image
+
+```bash
+adb shell getprop ro.build.id
+```
+
+⚠️ The `init_boot.img` you extract must come from the **same build ID** to avoid boot issues.
+
+---
+
+## 5. Install Magisk App
+
+Download the latest APK from:  
+👉 https://github.com/topjohnwu/Magisk/releases
+
+Then install:
+
+```bash
+adb install Magisk-vXX.X.apk
+```
+
+---
+
+## 6. Patch `init_boot.img`
+
+Push the image to phone:
+
+```bash
+adb push init_boot.img /sdcard/Download/
+adb shell ls -l /sdcard/Download/init_boot.img   # sanity check
+```
+
+On the phone:  
+- Open **Magisk**  
+- Tap **Install** → **Select and Patch a File**  
+- Choose `init_boot.img` → Tap **Let’s go**
+
+---
+
+## 7. Pull Back the Patched Image
+
+```bash
+adb shell ls -l /sdcard/Download/ | sed -n 's/.*\(magisk_patched.*\.img\).*/\1/p'
+adb pull /sdcard/Download/magisk_patched*.img
+ls -lh magisk_patched*.img   # quick size sanity check
+```
+
+Keep both:  
+- `init_boot.img` → stock backup  
+- `magisk_patched-xxxx.img` → to flash
+
+---
+
+## 8. Flash Patched Image to Current Slot
+
+```bash
+adb reboot bootloader
+fastboot getvar current-slot
+```
+
+Then either:
+
+```bash
+fastboot flash init_boot magisk_patched*.img
+```
+
+*(or explicitly to `_a` / `_b` if you prefer)*
+
+Reboot:
+
+```bash
+fastboot reboot
+```
+
+---
+
+## 9. Verify Root
+
+```bash
+adb shell su -c id
+# expect: uid=0(root) gid=0(root) ...
+```
+
+If Magisk app shows “**Additional setup required**”, accept and let it reboot.
+
+---
+
+✅ Done — device is rooted with Magisk.
